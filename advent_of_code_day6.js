@@ -15,20 +15,20 @@ function checkSymbol() {
   let nextSymbol = "";
   switch (guardSymbol) {
     case "^":
-      if (guardPosition[0] + 1 < map.length)
-        nextSymbol = map[guardPosition[0] + 1][guardPosition[1]];
+      if (guardPosition[0] - 1 >= 0)
+        nextSymbol = map[guardPosition[0] - 1][guardPosition[1]];
       break;
     case ">":
-      if (guardPosition[1] + 1 < map.length)
-        nextSymbol = map[guardPosition[0]][guardPosition[1] + 1];
-      break;
-    case "<":
       if (guardPosition[1] - 1 >= 0)
         nextSymbol = map[guardPosition[0]][guardPosition[1] - 1];
       break;
+    case "<":
+      if (guardPosition[1] + 1 < map.length)
+        nextSymbol = map[guardPosition[0]][guardPosition[1] + 1];
+      break;
     case "v":
-      if (guardPosition[0] - 1 >= 0)
-        nextSymbol = map[guardPosition[0] - 1][guardPosition[1]];
+      if (guardPosition[0] + 1 < map.length)
+        nextSymbol = map[guardPosition[0] + 1][guardPosition[1]];
       break;
     default:
       break;
@@ -39,16 +39,16 @@ function checkSymbol() {
 function changeGuard() {
   switch (guardSymbol) {
     case "^":
-      guardSymbol = ">";
+      guardSymbol = "<";
       break;
     case ">":
-      guardSymbol = "v";
-      break;
-    case "<":
       guardSymbol = "^";
       break;
+    case "<":
+      guardSymbol = "v";
+      break;
     case "v":
-      guardSymbol = "<";
+      guardSymbol = ">";
       break;
     default:
       break;
@@ -60,31 +60,31 @@ function moveGuard() {
     case "^":
       [
         map[guardPosition[0]][guardPosition[1]],
-        map[guardPosition[0] + 1][guardPosition[1]],
+        map[guardPosition[0] - 1][guardPosition[1]],
       ] = ["X", guardSymbol];
-      guardPosition[0] += 1;
+      guardPosition[0] -= 1;
       break;
     case ">":
-      [
-        map[guardPosition[0]][guardPosition[1]],
-        map[guardPosition[0]][guardPosition[1] + 1],
-      ] = ["X", guardSymbol];
-      guardPosition[1] += 1;
-      break;
-    case "<":
       [
         map[guardPosition[0]][guardPosition[1]],
         map[guardPosition[0]][guardPosition[1] - 1],
       ] = ["X", guardSymbol];
       guardPosition[1] -= 1;
+      break;
+    case "<":
+      [
+        map[guardPosition[0]][guardPosition[1]],
+        map[guardPosition[0]][guardPosition[1] + 1],
+      ] = ["X", guardSymbol];
+      guardPosition[1] += 1;
 
       break;
     case "v":
       [
         map[guardPosition[0]][guardPosition[1]],
-        map[guardPosition[0] - 1][guardPosition[1]],
+        map[guardPosition[0] + 1][guardPosition[1]],
       ] = ["X", guardSymbol];
-      guardPosition[0] -= 1;
+      guardPosition[0] += 1;
 
       break;
     default:
@@ -120,6 +120,8 @@ function checkGuard() {
 checkGuard();
 while (guardIsInMap) {
   guardMovement();
+  map.forEach((line) => console.log(line.join("")));
+  console.log("\n");
 }
 
 map.forEach((line) => {
