@@ -2,7 +2,8 @@ const input = document.getElementsByTagName("pre")[0].innerHTML.split(/\n/g);
 input.pop();
 
 let xCount = 0;
-let loopCount = 0;
+let obstructions = [];
+let initialPosition = [];
 
 function checkSymbol(symbol, position, mapTemplate) {
   let nextSymbol = "";
@@ -12,12 +13,12 @@ function checkSymbol(symbol, position, mapTemplate) {
         nextSymbol = mapTemplate[position[0] - 1][position[1]];
       break;
     case ">":
-      if (position[1] - 1 >= 0)
-        nextSymbol = mapTemplate[position[0]][position[1] - 1];
-      break;
-    case "<":
       if (position[1] + 1 < mapTemplate.length)
         nextSymbol = mapTemplate[position[0]][position[1] + 1];
+      break;
+    case "<":
+      if (position[1] - 1 >= 0)
+        nextSymbol = mapTemplate[position[0]][position[1] - 1];
       break;
     case "v":
       if (position[0] + 1 < mapTemplate.length)
@@ -26,30 +27,28 @@ function checkSymbol(symbol, position, mapTemplate) {
     default:
       break;
   }
-  console.log(nextSymbol);
+
   return nextSymbol;
 }
 
 function changeGuard(symbol) {
   let guardSymbol = symbol;
-  console.log("guardSymbol " + guardSymbol);
   switch (guardSymbol) {
     case "^":
-      guardSymbol = "<";
+      guardSymbol = ">";
       break;
     case ">":
-      guardSymbol = "^";
-      break;
-    case "<":
       guardSymbol = "v";
       break;
+    case "<":
+      guardSymbol = "^";
+      break;
     case "v":
-      guardSymbol = ">";
+      guardSymbol = "<";
       break;
     default:
       break;
   }
-  console.log("guardSymbol " + guardSymbol);
 
   return guardSymbol;
 }
@@ -69,16 +68,16 @@ function moveGuard(symbol, position, mapTemplate) {
     case ">":
       [
         map[guardPosition[0]][guardPosition[1]],
-        map[guardPosition[0]][guardPosition[1] - 1],
+        map[guardPosition[0]][guardPosition[1] + 1],
       ] = ["X", symbol];
-      guardPosition[1] -= 1;
+      guardPosition[1] += 1;
       break;
     case "<":
       [
         map[guardPosition[0]][guardPosition[1]],
-        map[guardPosition[0]][guardPosition[1] + 1],
+        map[guardPosition[0]][guardPosition[1] - 1],
       ] = ["X", symbol];
-      guardPosition[1] += 1;
+      guardPosition[1] -= 1;
 
       break;
     case "v":
@@ -110,11 +109,10 @@ function guardMovement(symbol, currentPosition, mapTemplate) {
         break;
       case ".":
       case "X":
-        checkLoop();
+        checkLoop(guardSymbol, position, map);
         let returnedMapCopy = "";
         [returnedMapCopy, position] = moveGuard(guardSymbol, position, map);
         map = JSON.parse(returnedMapCopy);
-        console.log(position);
 
         break;
       default:
@@ -135,44 +133,97 @@ function checkGuard(symbol, mapTemplate) {
   return position;
 }
 
-function checkColumn() {
-  includesX = false;
-  if (guardSymbol === ">") {
-    for (let i = guardPosition[0] + 1; i < map.length; i++) {
-      if (!includesX) includesX = map[i][guardPosition[1]] === "X";
-    }
-  }
-  if (guardSymbol === "<") {
-    for (let i = guardPosition[0] - 1; i >= 0; i--) {
-      if (!includesX) includesX = map[i][guardPosition[1]] === "X";
-    }
-  }
-
-  return includesX;
-}
-
-function checkLoop() {
-  const columnX = checkColumn();
-  switch (guardSymbol) {
+function checkObstructions(symbol, position) {
+  let isInArray = false;
+  let newObstruction = [];
+  switch (symbol) {
     case "^":
-      if (map[guardPosition[0]].includes("X", guardPosition[1] + 1)) {
-      }
+      newObstruction.push(position[0] - 1, position[1]);
       break;
     case ">":
-      if (columnX) {
-      }
+      newObstruction.push(position[0], position[1] + 1);
       break;
     case "<":
-      if (columnX) {
-      }
+      newObstruction.push(position[0], position[1] - 1);
       break;
     case "v":
-      if (map[guardPosition[0]].includes("X", guardPosition[1] - 1)) {
-      }
+      newObstruction.push(position[0] + 1, position[1]);
       break;
     default:
       break;
   }
+  obstructions.forEach((obstruction) => {
+    if (
+      obstruction[0] === newObstruction[0] &&
+      obstruction[1] === newObstruction[1] &&
+      newObstruction[0] !== initialPosition[0] &&
+      newObstruction[1] !== initialPosition[1]
+    ) {
+      isInArray = true;
+    }
+  });
+  return isInArray;
+}
+
+function checkLoop(symbol, position, mapTemplate) {
+  const originalMap = JSON.stringify(mapTemplate);
+  let map = JSON.parse(originalMap);
+  const isInArray = checkObstructions(symbol, position);
+  let loopFound = false;
+  if (isInArray) {
+    return;
+  } else
+    switch (symbol) {
+      case "^":
+        map[position[0] - 1][position[1]] = "O";
+        loopFound = tryLoop(symbol, position, map);
+        if (loopFound) {
+          obstructions.push([position[0] - 1, position[1]]);
+          console.log("loopFound! " + obstructions);
+        }
+        break;
+      case ">":
+        map[position[0]][position[1] + 1] = "O";
+        loopFound = tryLoop(symbol, position, map);
+        if (loopFound) {
+          obstructions.push([position[0], position[1] + 1]);
+          console.log("loopFound! " + obstructions);
+        }
+        break;
+      case "<":
+        map[position[0]][position[1] - 1] = "O";
+        loopFound = tryLoop(symbol, position, map);
+        if (loopFound) {
+          obstructions.push([position[0], position[1] - 1]);
+          console.log("loopFound! " + obstructions);
+        }
+
+        break;
+      case "v":
+        map[position[0] + 1][position[1]] = "O";
+        loopFound = tryLoop(symbol, position, map);
+        if (loopFound) {
+          obstructions.push([position[0] + 1, position[1]]);
+          console.log("loopFound! " + obstructions);
+        }
+        break;
+      default:
+        break;
+    }
+}
+
+function lastHitCheck(lastHitPositions, lasthitSymbols, position, symbol) {
+  let hitCheck = false;
+  lastHitPositions.forEach((hitPosition, index) => {
+    if (
+      hitPosition[0] === position[0] &&
+      hitPosition[1] === position[1] &&
+      lasthitSymbols[index] === symbol
+    ) {
+      hitCheck = true;
+    }
+  });
+  return hitCheck;
 }
 
 function tryLoop(symbol, position, mapTemplate) {
@@ -180,6 +231,49 @@ function tryLoop(symbol, position, mapTemplate) {
   let guardPosition = [...position];
   const originalMap = JSON.stringify(mapTemplate);
   let map = JSON.parse(originalMap);
+  let isInMap = true;
+  let lastHitPositions = [];
+  let lasthitSymbols = [];
+  let loopFound = false;
+
+  while (isInMap) {
+    const nextSymbol = checkSymbol(guardSymbol, guardPosition, map);
+    const hitCheck = lastHitCheck(
+      lastHitPositions,
+      lasthitSymbols,
+      guardPosition,
+      guardSymbol
+    );
+    switch (nextSymbol) {
+      case "O":
+      case "#":
+        if (hitCheck) {
+          loopFound = true;
+          isInMap = false;
+        } else {
+          lastHitPositions.push(guardPosition);
+          lasthitSymbols.push(guardSymbol);
+          guardSymbol = changeGuard(guardSymbol);
+        }
+        break;
+      case ".":
+      case "X":
+        let returnedMapCopy = "";
+        [returnedMapCopy, guardPosition] = moveGuard(
+          guardSymbol,
+          guardPosition,
+          map
+        );
+        map = JSON.parse(returnedMapCopy);
+
+        break;
+      default:
+        map[position[0]][position[1]] = "X";
+        isInMap = false;
+        break;
+    }
+  }
+  return loopFound;
 }
 
 function findX() {
@@ -192,6 +286,8 @@ function findX() {
   });
 
   guardPosition = [...checkGuard(guardSymbol, map)];
+  initialPosition = [...guardPosition];
+
   const returnedMap = guardMovement(guardSymbol, guardPosition, map);
   const returnedMapCopy = JSON.stringify(returnedMap);
   map = JSON.parse(returnedMapCopy);
@@ -204,3 +300,4 @@ function findX() {
 findX();
 
 console.log(xCount);
+console.log(obstructions.length);
