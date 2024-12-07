@@ -5,6 +5,12 @@ let xCount = 0;
 let obstructions = [];
 let initialPosition = [];
 
+function printMap(mapTemplate) {
+  console.log("Mappa: ");
+  mapTemplate.forEach((line) => console.log(line.join("")));
+  console.log("\n");
+}
+
 function checkSymbol(symbol, position, mapTemplate) {
   let nextSymbol = "";
   switch (symbol) {
@@ -53,40 +59,51 @@ function changeGuard(symbol) {
   return guardSymbol;
 }
 
-function moveGuard(symbol, position, mapTemplate) {
+function moveGuard(symbol, position, mapTemplate, nextSymbol) {
   guardPosition = [...position];
   const originalMap = JSON.stringify(mapTemplate);
   let map = JSON.parse(originalMap);
+  let next = nextSymbol;
   switch (symbol) {
     case "^":
-      [
-        map[guardPosition[0]][guardPosition[1]],
-        map[guardPosition[0] - 1][guardPosition[1]],
-      ] = ["X", symbol];
-      guardPosition[0] -= 1;
+      while (next === "X") {
+        [
+          map[guardPosition[0]][guardPosition[1]],
+          map[guardPosition[0] - 1][guardPosition[1]],
+        ] = ["X", symbol];
+        guardPosition[0] -= 1;
+        next = checkSymbol(symbol, guardPosition, map);
+      }
       break;
     case ">":
-      [
-        map[guardPosition[0]][guardPosition[1]],
-        map[guardPosition[0]][guardPosition[1] + 1],
-      ] = ["X", symbol];
-      guardPosition[1] += 1;
+      while (next === "X") {
+        [
+          map[guardPosition[0]][guardPosition[1]],
+          map[guardPosition[0]][guardPosition[1] + 1],
+        ] = ["X", symbol];
+        guardPosition[1] += 1;
+        next = checkSymbol(symbol, guardPosition, map);
+      }
       break;
     case "<":
-      [
-        map[guardPosition[0]][guardPosition[1]],
-        map[guardPosition[0]][guardPosition[1] - 1],
-      ] = ["X", symbol];
-      guardPosition[1] -= 1;
-
+      while (next === "X") {
+        [
+          map[guardPosition[0]][guardPosition[1]],
+          map[guardPosition[0]][guardPosition[1] - 1],
+        ] = ["X", symbol];
+        guardPosition[1] -= 1;
+        next = checkSymbol(symbol, guardPosition, map);
+      }
       break;
     case "v":
-      [
-        map[guardPosition[0]][guardPosition[1]],
-        map[guardPosition[0] + 1][guardPosition[1]],
-      ] = ["X", symbol];
-      guardPosition[0] += 1;
-
+      while (next === "X") {
+        [
+          map[guardPosition[0]][guardPosition[1]],
+          map[guardPosition[0] + 1][guardPosition[1]],
+        ] = ["X", symbol];
+        guardPosition[0] += 1;
+        next = checkSymbol(symbol, guardPosition, map);
+      }
       break;
     default:
       break;
@@ -111,7 +128,12 @@ function guardMovement(symbol, currentPosition, mapTemplate) {
       case "X":
         checkLoop(guardSymbol, position, map);
         let returnedMapCopy = "";
-        [returnedMapCopy, position] = moveGuard(guardSymbol, position, map);
+        [returnedMapCopy, position] = moveGuard(
+          guardSymbol,
+          position,
+          map,
+          nextSymbol
+        );
         map = JSON.parse(returnedMapCopy);
 
         break;
@@ -179,7 +201,7 @@ function checkLoop(symbol, position, mapTemplate) {
         loopFound = tryLoop(symbol, position, map);
         if (loopFound) {
           obstructions.push([position[0] - 1, position[1]]);
-          console.log("loopFound! " + obstructions);
+          printMap(map);
         }
         break;
       case ">":
@@ -187,7 +209,7 @@ function checkLoop(symbol, position, mapTemplate) {
         loopFound = tryLoop(symbol, position, map);
         if (loopFound) {
           obstructions.push([position[0], position[1] + 1]);
-          console.log("loopFound! " + obstructions);
+          printMap(map);
         }
         break;
       case "<":
@@ -195,7 +217,7 @@ function checkLoop(symbol, position, mapTemplate) {
         loopFound = tryLoop(symbol, position, map);
         if (loopFound) {
           obstructions.push([position[0], position[1] - 1]);
-          console.log("loopFound! " + obstructions);
+          printMap(map);
         }
 
         break;
@@ -204,7 +226,7 @@ function checkLoop(symbol, position, mapTemplate) {
         loopFound = tryLoop(symbol, position, map);
         if (loopFound) {
           obstructions.push([position[0] + 1, position[1]]);
-          console.log("loopFound! " + obstructions);
+          printMap(map);
         }
         break;
       default:
