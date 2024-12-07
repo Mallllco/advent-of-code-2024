@@ -6,7 +6,7 @@ let obstructions = [];
 let initialPosition = [];
 
 function printMap(mapTemplate) {
-  console.log("Mappa: ");
+  console.log("Mappa:\n");
   mapTemplate.forEach((line) => console.log(line.join("")));
   console.log("\n");
 }
@@ -66,7 +66,7 @@ function moveGuard(symbol, position, mapTemplate, nextSymbol) {
   let next = nextSymbol;
   switch (symbol) {
     case "^":
-      while (next === "X") {
+      while (next === "X" || next === ".") {
         [
           map[guardPosition[0]][guardPosition[1]],
           map[guardPosition[0] - 1][guardPosition[1]],
@@ -76,7 +76,7 @@ function moveGuard(symbol, position, mapTemplate, nextSymbol) {
       }
       break;
     case ">":
-      while (next === "X") {
+      while (next === "X" || next === ".") {
         [
           map[guardPosition[0]][guardPosition[1]],
           map[guardPosition[0]][guardPosition[1] + 1],
@@ -86,7 +86,7 @@ function moveGuard(symbol, position, mapTemplate, nextSymbol) {
       }
       break;
     case "<":
-      while (next === "X") {
+      while (next === "X" || next === ".") {
         [
           map[guardPosition[0]][guardPosition[1]],
           map[guardPosition[0]][guardPosition[1] - 1],
@@ -96,7 +96,7 @@ function moveGuard(symbol, position, mapTemplate, nextSymbol) {
       }
       break;
     case "v":
-      while (next === "X") {
+      while (next === "X" || next === ".") {
         [
           map[guardPosition[0]][guardPosition[1]],
           map[guardPosition[0] + 1][guardPosition[1]],
